@@ -1,0 +1,45 @@
+# Parameters
+$DaysBack = 7
+$Limit = 50
+$OutputFile = "FoodRecalls.csv"
+
+# Calculate date filter (YYYYMMDD)
+$StartDate = (Get-Date).AddDays(-$DaysBack).ToString("yyyyMMdd")
+$EndDate = (Get-Date).ToString("yyyyMMdd")
+
+# FDA API endpoint
+$Url = "https://api.fda.gov/food/enforcement.json?search=report_date:[$StartDate+TO+$EndDate]&limit=$Limit"
+
+Write-Host "Fetching food recalls from $StartDate to $EndDate..."
+
+try {
+    $response = Invoke-RestMethod -Uri $Url -Method Get
+
+    if ($response.results.Count -eq 0) {
+        Write-Host "No recalls found."
+        return
+    }
+    
+    # Transform data into a cleaner format
+    $recalls = $response.results | ForEach-Object {
+        [PSCustomObject]@{
+            RecallDate   = $_.report_date
+            Product      = $_.product_description
+            Reason       = $_.reason_for_recall
+            Company      = $_.recalling_firm
+            Classification = $_.classification
+            Status         = $_.status
+        }
+    }
+    
+    # Display in console
+    $recalls | Format-Table -AutoSize
+    
+    # Save to CSV
+    $recalls | Export-Csv -path $OutputFile -NoTypeInformation -Encoding UTF8
+    
+    Write-Host "`nSaved results to $Outputefile"
+
+    } Catch {
+        Write-Error "Failed to retrieve data: $_"
+        }
