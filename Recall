@@ -43,3 +43,8 @@ try {
     } Catch {
         Write-Error "Failed to retrieve data: $_"
         }
+
+$Action =New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-FileC:/Scripts/FoodRecalls.ps1"
+$Trigger = New-ScheduledTaskTrigger -Daily -At 9am
+Register-ScheduledTask -TaskName "FoodRecallCheck" -Action $Action -Trigger $Trigger
+        
