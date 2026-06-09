@@ -1,1 +1,3 @@
 
+Get-EventLog -LogName System
+
